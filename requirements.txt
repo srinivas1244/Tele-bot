@@ -1,0 +1,32 @@
+# Telegram bot framework
+python-telegram-bot>=21.6
+
+# HTTP client (async) — used for scanning AND free AI API calls (Groq/Ollama)
+httpx>=0.27
+
+# Data validation — unpinned so pip picks a version with cp314 pre-built wheels
+pydantic>=2.9
+
+# HTML parsing
+beautifulsoup4>=4.12
+
+# Domain/TLD extraction
+tldextract>=5.1
+
+# Cryptography (TLS / certificate analysis)
+cryptography>=43
+
+# PDF generation
+reportlab>=4.2
+
+# Jinja2 (HTML templates)
+jinja2>=3.1
+
+# Environment variables
+python-dotenv>=1.0
+
+# ── No paid AI SDK required ───────────────────────────────────────────────────
+# AI reports use free providers via httpx (already listed above):
+#   Ollama  → local LLM, free, install from https://ollama.com
+#   Groq    → free cloud API key from https://console.groq.com (no credit card)
+#   none    → structured rule-based report, zero AI setup needed (default)
