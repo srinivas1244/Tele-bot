@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import os
+import re
 import textwrap
-from datetime import datetime
+from urllib.parse import urlparse
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
@@ -22,6 +23,11 @@ from reportlab.platypus import (
 
 import config
 from scanner.models import ScanResult, Severity
+
+
+def _safe_filename(target: str) -> str:
+    host = urlparse(target).hostname or target
+    return re.sub(r"[^a-zA-Z0-9]+", "_", host).strip("_")[:50]
 
 _SEVERITY_COLORS = {
     "Critical": colors.HexColor("#C0392B"),
@@ -44,7 +50,7 @@ def export_pdf(result: ScanResult, ai_report_text: str = "") -> str:
     """Generate a PDF report. Returns the file path."""
     os.makedirs(config.REPORT_DIR, exist_ok=True)
     timestamp = result.started_at.strftime("%Y%m%d_%H%M%S")
-    safe_target = result.target_normalized.replace("://", "_").replace("/", "_").replace(":", "_")[:60]
+    safe_target = _safe_filename(result.target_normalized)
     filename = f"{config.REPORT_DIR}/scan_{safe_target}_{timestamp}.pdf"
 
     doc = SimpleDocTemplate(

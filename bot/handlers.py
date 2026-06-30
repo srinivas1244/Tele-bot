@@ -4,7 +4,14 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import warnings
 from datetime import datetime
+
+from telegram.warnings import PTBUserWarning
+
+# ConversationHandler with mixed MessageHandler + CallbackQueryHandler can't
+# satisfy per_message either way — suppress the cosmetic warning.
+warnings.filterwarnings("ignore", message=".*per_message.*", category=PTBUserWarning)
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ChatAction, ParseMode
@@ -322,9 +329,18 @@ async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     )
 
 
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.error("Unhandled exception", exc_info=context.error)
+
+
+async def _post_init(app: Application) -> None:
+    """Delete any stale webhook/polling session before startup to prevent 409 Conflict."""
+    await app.bot.delete_webhook(drop_pending_updates=True)
+
+
 def build_application(token: str) -> Application:
     """Build and configure the Telegram Application."""
-    app = Application.builder().token(token).build()
+    app = Application.builder().token(token).post_init(_post_init).build()
 
     # Conversation handler
     conv_handler = ConversationHandler(
@@ -349,5 +365,6 @@ def build_application(token: str) -> Application:
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("status", status_command))
     app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
+    app.add_error_handler(error_handler)
 
     return app

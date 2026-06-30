@@ -3,17 +3,23 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime
+import re
+from urllib.parse import urlparse
 
 import config
 from scanner.models import ScanResult
+
+
+def _safe_filename(target: str) -> str:
+    host = urlparse(target).hostname or target
+    return re.sub(r"[^a-zA-Z0-9]+", "_", host).strip("_")[:50]
 
 
 def export_json(result: ScanResult) -> str:
     """Export scan result to a JSON file. Returns the file path."""
     os.makedirs(config.REPORT_DIR, exist_ok=True)
     timestamp = result.started_at.strftime("%Y%m%d_%H%M%S")
-    safe_target = result.target_normalized.replace("://", "_").replace("/", "_").replace(":", "_")[:60]
+    safe_target = _safe_filename(result.target_normalized)
     filename = f"{config.REPORT_DIR}/scan_{safe_target}_{timestamp}.json"
 
     data = {

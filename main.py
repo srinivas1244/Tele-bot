@@ -30,8 +30,8 @@ def validate_config() -> None:
     errors: list[str] = []
     if not config.TELEGRAM_BOT_TOKEN:
         errors.append("TELEGRAM_BOT_TOKEN is not set.")
-    if not config.ANTHROPIC_API_KEY:
-        logger.warning("ANTHROPIC_API_KEY not set — AI report generation will use fallback mode.")
+    if config.AI_PROVIDER == "groq" and not config.GROQ_API_KEY:
+        logger.warning("AI_PROVIDER=groq but GROQ_API_KEY not set — AI reports will fall back to structured mode.")
     if errors:
         for e in errors:
             logger.error(e)
@@ -48,7 +48,13 @@ def main() -> None:
     ensure_directories()
 
     logger.info("Starting Security Assessment Bot...")
-    logger.info("Model: %s", config.CLAUDE_MODEL)
+    if config.AI_PROVIDER == "groq":
+        ai_model = config.GROQ_MODEL
+    elif config.AI_PROVIDER == "ollama":
+        ai_model = config.OLLAMA_MODEL
+    else:
+        ai_model = "none"
+    logger.info("AI provider: %s | Model: %s", config.AI_PROVIDER, ai_model)
     logger.info("Max scans/user/hour: %d", config.MAX_SCANS_PER_USER_PER_HOUR)
 
     if config.AUTHORIZED_USER_IDS:

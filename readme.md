@@ -1,4 +1,4 @@
-# Security Assessment Telegram Bot
+#  Assessment Telegram Bot
 
 A safe, authorized-only Telegram bot that performs non-destructive website and API security assessments and generates AI-powered reports using Claude.
 

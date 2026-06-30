@@ -112,9 +112,14 @@ async def _groq_report(result: ScanResult) -> str | None:
 
 # ── Shared prompt ─────────────────────────────────────────────────────────────
 
+_MAX_FINDINGS_IN_PROMPT = 12
+
+
 def _build_prompt(result: ScanResult) -> str:
     """Build the security report prompt sent to any LLM."""
     sorted_findings = result.sorted_findings()
+    included = sorted_findings[:_MAX_FINDINGS_IN_PROMPT]
+    omitted = len(sorted_findings) - len(included)
     findings_json = json.dumps(
         [
             {
@@ -132,10 +137,11 @@ def _build_prompt(result: ScanResult) -> str:
                 "validation_steps": f.validation_steps,
                 "category": f.category,
             }
-            for f in sorted_findings
+            for f in included
         ],
-        indent=2,
+        separators=(",", ":"),
     )
+    omitted_note = f"\n(+ {omitted} lower-severity findings omitted for brevity)" if omitted else ""
 
     tech_summary = ", ".join(result.technologies_detected[:8]) or "Not detected"
     open_ports = ", ".join(f"{p.port}/{p.service}" for p in result.open_ports[:10]) or "None detected"
@@ -159,7 +165,7 @@ Technologies: {tech_summary}
 Open Ports: {open_ports}
 
 FINDINGS (JSON):
-{findings_json}
+{findings_json}{omitted_note}
 
 Write a report with these sections:
 
